@@ -49,7 +49,7 @@ class PaymentService:
         elif len(cleaned_phone) == 10:
             cleaned_phone = f"91{cleaned_phone}"
         
-        utr_display = utr.strip() if utr and utr.strip() else "Attached in Screenshot"
+        utr_line = f"UPI Ref (Last 4 Digits): {utr.strip()}\n" if utr and utr.strip() else ""
 
         message = (
             f"Hello Admin,\n\n"
@@ -58,7 +58,7 @@ class PaymentService:
             f"Name: {player_name}\n"
             f"Mobile: {mobile_number}\n"
             f"Amount: ₹{int(amount) if amount.is_integer() else f'{amount:.2f}'}\n"
-            f"UPI Ref (Last 4 Digits): {utr_display}\n\n"
+            f"{utr_line}\n"
             f"Please verify my payment screenshot and confirm my registration.\n\n"
             f"Thank you."
         )
