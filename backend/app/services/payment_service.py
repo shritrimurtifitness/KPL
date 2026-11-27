@@ -95,7 +95,7 @@ class PaymentService:
         if reg.status == RegistrationStatus.RESERVED.value and ensure_utc(reg.reservation_expires_at) <= now:
             reg.status = RegistrationStatus.EXPIRED.value
             db.commit()
-            raise HTTPException(status_code=400, detail="Reservation window (15 minutes) has elapsed. Slot expired.")
+            raise HTTPException(status_code=400, detail="Reservation window (10 minutes) has elapsed. Slot expired.")
 
         # 3. Check duplicate UTR across all payments
         existing_payment = db.query(Payment).filter(Payment.utr == clean_utr).first()

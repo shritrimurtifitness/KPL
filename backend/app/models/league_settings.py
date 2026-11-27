@@ -13,7 +13,7 @@ class LeagueSettings(Base):
     maximum_registrations = Column(Integer, default=120, nullable=False)
     registration_open = Column(Boolean, default=True, nullable=False)
     registration_deadline = Column(DateTime(timezone=True), nullable=True)
-    reservation_minutes = Column(Integer, default=15, nullable=False)
+    reservation_minutes = Column(Integer, default=10, nullable=False)
     
     # UPI and Payment details
     upi_id = Column(String(100), default="cricketleague@upi", nullable=False)

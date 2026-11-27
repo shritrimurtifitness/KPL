@@ -88,7 +88,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="bg-[#131B2E]/80 border border-slate-800 p-4 rounded-2xl text-center shadow-lg">
                 <span className="text-xs uppercase text-slate-400 font-medium">Slot Hold</span>
-                <p className="text-2xl font-bold text-slate-200 mt-1 font-mono">15 Min</p>
+                <p className="text-2xl font-bold text-slate-200 mt-1 font-mono">10 Min</p>
                 <span className="text-[11px] text-slate-500">Temporary Lock</span>
               </div>
             </div>
@@ -147,9 +147,9 @@ export const LandingPage: React.FC = () => {
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center mb-4">
               2
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Slot Locked (15m)</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Slot Locked (10m)</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
-              An available slot is concurrency-reserved for you for 15 minutes while you make payment.
+              An available slot is concurrency-reserved for you for 10 minutes while you make payment.
             </p>
           </div>
 
@@ -193,7 +193,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div className="flex items-start space-x-3 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
               <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-              <span>Payment proof submission must happen within 15 minutes of filling the registration form.</span>
+              <span>Payment proof submission must happen within 10 minutes of filling the registration form.</span>
             </div>
             <div className="flex items-start space-x-3 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
               <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />

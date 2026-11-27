@@ -207,12 +207,12 @@ export const PaymentPage: React.FC = () => {
           </p>
         </div>
 
-        {/* 15-Minute Countdown */}
+        {/* 10-Minute Countdown */}
         {registration?.reservation_expires_at && registration.status === 'RESERVED' && !submitSuccess && (
           <CountdownTimer
             expiresAt={registration.reservation_expires_at}
             onExpire={() => {
-              setError('Your 15-minute reservation window has expired. The slot has been released.');
+              setError('Your 10-minute reservation window has expired. The slot has been released.');
             }}
           />
         )}

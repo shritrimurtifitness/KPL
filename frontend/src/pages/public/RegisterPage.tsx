@@ -222,7 +222,7 @@ export const RegisterPage: React.FC = () => {
             </div>
           </div>
           <p className="text-sm text-slate-400 mt-2">
-            Submitting this form reserves your slot for 15 minutes to complete direct UPI payment.
+            Submitting this form reserves your slot for 10 minutes to complete direct UPI payment.
           </p>
         </div>
 

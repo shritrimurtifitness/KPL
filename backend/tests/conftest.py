@@ -79,7 +79,7 @@ def default_league_settings(db_session):
             registration_fee=100.00,
             maximum_registrations=120,
             registration_open=True,
-            reservation_minutes=15,
+            reservation_minutes=10,
             upi_id="kpl@upi",
             upi_display_name="KPL Official",
             whatsapp_number="+919876543210",

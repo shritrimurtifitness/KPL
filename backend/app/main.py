@@ -48,7 +48,7 @@ def init_db():
                 registration_fee=100.00,
                 maximum_registrations=120,
                 registration_open=True,
-                reservation_minutes=15,
+                reservation_minutes=10,
                 upi_id="indrajeet.shirgaonkar-1@okaxis",
                 upi_display_name="INDUJI",
                 upi_qr_path="/images/official_upi_qr.png",
@@ -63,7 +63,7 @@ def init_db():
                     "5. The organizing committee's decision regarding schedule and disputes is final."
                 ),
                 registration_instructions=(
-                    "1. Fill out your accurate player profile and submit to temporarily reserve your slot for 15 minutes.\n"
+                    "1. Fill out your accurate player profile and submit to temporarily reserve your slot for 10 minutes.\n"
                     "2. Pay ₹100 to the official UPI ID or scan the UPI QR code.\n"
                     "3. Enter your 12-digit UPI UTR reference number and upload the screenshot proof.\n"
                     "4. Once submitted, our admin team will review and confirm your registration."

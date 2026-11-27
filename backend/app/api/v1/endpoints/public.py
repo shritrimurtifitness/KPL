@@ -75,7 +75,7 @@ def create_registration(
     db: Session = Depends(get_db)
 ):
     """
-    Atomically checks capacity and reserves a slot for 15 minutes.
+    Atomically checks capacity and reserves a slot for 10 minutes.
     Returns Registration ID and reservation expiration.
     """
     registration = SlotManager.reserve_slot(db, data.model_dump())

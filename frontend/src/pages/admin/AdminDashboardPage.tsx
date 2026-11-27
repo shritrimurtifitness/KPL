@@ -203,7 +203,7 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-[#0F172A] border border-slate-800 p-5 rounded-2xl flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-400 uppercase font-medium">Active 15m Reservations</span>
+            <span className="text-xs text-slate-400 uppercase font-medium">Active 10m Reservations</span>
             <p className="text-2xl font-bold text-white mt-0.5 font-mono">
               {stats?.active_reservations || 0}
             </p>
