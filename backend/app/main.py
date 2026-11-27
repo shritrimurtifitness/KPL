@@ -1,10 +1,13 @@
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.database.session import engine, Base, SessionLocal
+from app.database.session import engine, Base, SessionLocal, get_db
 from app.models.admin import Admin
 from app.models.league_settings import LeagueSettings
 from app.api.v1.router import api_router
@@ -108,13 +111,34 @@ app.add_middleware(
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "status": "healthy",
+        "service": settings.PROJECT_NAME,
+        "docs": "/docs",
+        "health": "/health"
+    }
+
 @app.get("/health", tags=["Health"])
-def health_check():
+@app.get("/api/v1/health", tags=["Health"])
+def health_check(db: Session = Depends(get_db)):
+    db_status = "connected"
+    cleaned_slots = 0
+    try:
+        db.execute(text("SELECT 1;"))
+        cleaned_slots = SlotManager.cleanup_expired_reservations(db)
+    except Exception as e:
+        db_status = f"error: {str(e)[:50]}"
+
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "environment": settings.ENV,
+        "database": db_status,
+        "expired_reservations_cleaned": cleaned_slots,
+        "timestamp_utc": datetime.now(timezone.utc).isoformat()
     }
 
 @app.exception_handler(Exception)
