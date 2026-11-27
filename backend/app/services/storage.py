@@ -175,4 +175,29 @@ class StorageService:
         mime_type, _ = mimetypes.guess_type(local_path)
         return data, None, mime_type or "image/jpeg"
 
+    def delete_file(self, storage_path: Optional[str]) -> bool:
+        """
+        Deletes a file from Supabase storage bucket or local disk.
+        """
+        if not storage_path:
+            return False
+        try:
+            if storage_path.startswith("supabase://"):
+                parts = storage_path.replace("supabase://", "").split("/", 1)
+                if len(parts) == 2 and self.supabase_client:
+                    bucket, path = parts[0], parts[1]
+                    self.supabase_client.storage.from_(bucket).remove([path])
+                    return True
+            elif storage_path.startswith("local://"):
+                filename = storage_path.replace("local://", "")
+                if "/" in filename:
+                    filename = os.path.basename(filename)
+                local_path = os.path.join(self.local_dir, filename)
+                if os.path.exists(local_path):
+                    os.remove(local_path)
+                    return True
+        except Exception as e:
+            print(f"[StorageService] Failed to delete storage file {storage_path}: {e}")
+        return False
+
 storage_service = StorageService()

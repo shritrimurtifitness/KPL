@@ -9,6 +9,7 @@ from app.models.admin import Admin
 from app.models.registration import Registration, RegistrationStatus
 from app.models.payment import Payment, PaymentStatus
 from app.models.league_settings import LeagueSettings
+from app.models.audit_log import AuditLog
 from app.schemas.dashboard import (
     DashboardOverviewStats,
     RegistrationDetailResponse,
@@ -16,6 +17,7 @@ from app.schemas.dashboard import (
 )
 from app.services.slot_manager import SlotManager, get_utc_now
 from app.services.export_service import ExportService
+from app.services.storage import storage_service
 
 router = APIRouter()
 
@@ -169,3 +171,86 @@ def export_registrations(
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
+
+@router.delete("/registrations/{id}")
+def delete_registration(
+    id: str,
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(get_current_admin)
+):
+    """
+    Deletes an individual registration and its associated payment records and stored media files.
+    """
+    reg = db.query(Registration).filter(
+        or_(Registration.id == id, Registration.registration_id == id)
+    ).first()
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registration record not found.")
+
+    reg_id = reg.registration_id
+    player_name = reg.full_name
+
+    # Remove storage files if present
+    if reg.photo_path:
+        storage_service.delete_file(reg.photo_path)
+    for p in reg.payments:
+        if p.screenshot_path:
+            storage_service.delete_file(p.screenshot_path)
+
+    # Delete registration from database (cascades to payments)
+    db.delete(reg)
+
+    # Log action
+    audit = AuditLog(
+        admin_id=current_admin.id,
+        action="REGISTRATION_DELETED",
+        entity_type="registration",
+        entity_id=id,
+        description=f"Admin {current_admin.email} deleted registration {reg_id} ({player_name})."
+    )
+    db.add(audit)
+    db.commit()
+
+    return {"message": f"Registration {reg_id} successfully deleted.", "registration_id": reg_id}
+
+@router.delete("/registrations")
+def delete_all_registrations(
+    confirm: bool = Query(False, description="Explicit confirmation parameter"),
+    db: Session = Depends(get_db),
+    current_admin: Admin = Depends(get_current_admin)
+):
+    """
+    Purges all registrations and associated payment proofs for launching live registrations.
+    Requires ?confirm=true.
+    """
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Confirmation required. Pass ?confirm=true to delete all player records."
+        )
+
+    registrations = db.query(Registration).all()
+    count = len(registrations)
+
+    for reg in registrations:
+        if reg.photo_path:
+            storage_service.delete_file(reg.photo_path)
+        for p in reg.payments:
+            if p.screenshot_path:
+                storage_service.delete_file(p.screenshot_path)
+        db.delete(reg)
+
+    audit = AuditLog(
+        admin_id=current_admin.id,
+        action="ALL_REGISTRATIONS_PURGED",
+        entity_type="system",
+        entity_id="all",
+        description=f"Admin {current_admin.email} purged all {count} player registrations to start fresh."
+    )
+    db.add(audit)
+    db.commit()
+
+    return {
+        "message": f"Successfully deleted all {count} registrations and payment records.",
+        "deleted_count": count
+    }

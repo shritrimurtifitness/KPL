@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileSpreadsheet,
-  User
+  User,
+  Trash2
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { resolveMediaUrl } from '../../utils/media';
@@ -47,6 +48,10 @@ export const AdminRegistrationsPage: React.FC = () => {
 
   // Export state
   const [exporting, setExporting] = useState<string | null>(null);
+
+  // Deletion state
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [purging, setPurging] = useState(false);
 
   useEffect(() => {
     fetchRegistrations();
@@ -105,6 +110,45 @@ export const AdminRegistrationsPage: React.FC = () => {
       alert('Failed to export.');
     } finally {
       setExporting(null);
+    }
+  };
+
+  const handleDeleteRegistration = async (id: string, regLabel: string, playerName: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete registration ${regLabel} for ${playerName}? This action cannot be undone.`)) {
+      return;
+    }
+    setDeletingId(id);
+    try {
+      await api.delete(`/admin/registrations/${id}`);
+      if (selectedReg && (selectedReg.id === id || selectedReg.registration_id === id)) {
+        setSelectedReg(null);
+      }
+      fetchRegistrations();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete registration.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handlePurgeAll = async () => {
+    const confirmation = window.prompt(
+      'Type "DELETE ALL" to permanently erase all registrations and payment records for a fresh tournament launch:'
+    );
+    if (confirmation !== 'DELETE ALL') {
+      return;
+    }
+    setPurging(true);
+    try {
+      const res = await api.delete('/admin/registrations?confirm=true');
+      alert(res.data.message || 'All registration data has been purged successfully.');
+      setSelectedReg(null);
+      setPage(1);
+      fetchRegistrations();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to purge registration data.');
+    } finally {
+      setPurging(false);
     }
   };
 
@@ -184,6 +228,17 @@ export const AdminRegistrationsPage: React.FC = () => {
             {exporting === 'excel' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
             <span>Excel</span>
           </button>
+          {registrations.length > 0 && (
+            <button
+              onClick={handlePurgeAll}
+              disabled={purging}
+              className="inline-flex items-center space-x-2 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition-colors"
+              title="Delete all player registrations to start fresh"
+            >
+              {purging ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              <span>Reset All Records</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -329,6 +384,14 @@ export const AdminRegistrationsPage: React.FC = () => {
                         >
                           <MessageCircle className="w-4 h-4" />
                         </a>
+                        <button
+                          onClick={() => handleDeleteRegistration(reg.id, reg.registration_id, reg.full_name)}
+                          disabled={deletingId === reg.id}
+                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors disabled:opacity-50"
+                          title="Delete Registration"
+                        >
+                          {deletingId === reg.id ? <Loader2 className="w-4 h-4 animate-spin text-rose-400" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
                       </td>
                     </tr>
                   );
@@ -420,23 +483,31 @@ export const AdminRegistrationsPage: React.FC = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="grid grid-cols-3 gap-2 pt-1">
                     <button
                       onClick={() => handleOpenDetail(reg.id)}
-                      className="inline-flex items-center justify-center space-x-1.5 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors"
+                      className="inline-flex items-center justify-center space-x-1 py-2 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5 text-slate-400" />
-                      <span>View Profile</span>
+                      <span>Profile</span>
                     </button>
                     <a
                       href={`https://wa.me/91${reg.mobile.replace(/[^0-9]/g, '').slice(-10)}?text=${encodeURIComponent(`Hello ${reg.full_name}, regarding your tournament registration ${reg.registration_id}:`)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center justify-center space-x-1.5 py-2.5 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-xl transition-colors"
+                      className="inline-flex items-center justify-center space-x-1 py-2 px-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-xl transition-colors"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
                       <span>WhatsApp</span>
                     </a>
+                    <button
+                      onClick={() => handleDeleteRegistration(reg.id, reg.registration_id, reg.full_name)}
+                      disabled={deletingId === reg.id}
+                      className="inline-flex items-center justify-center space-x-1 py-2 px-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 text-xs font-semibold rounded-xl transition-colors disabled:opacity-50"
+                    >
+                      {deletingId === reg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      <span>Delete</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -617,7 +688,16 @@ export const AdminRegistrationsPage: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleDeleteRegistration(selectedReg.id, selectedReg.registration_id, selectedReg.full_name)}
+                disabled={deletingId === selectedReg.id}
+                className="px-4 py-2.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 rounded-xl text-xs font-semibold inline-flex items-center space-x-2 transition-colors disabled:opacity-50"
+              >
+                {deletingId === selectedReg.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>Delete Player</span>
+              </button>
               <button
                 onClick={() => setSelectedReg(null)}
                 className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold"
