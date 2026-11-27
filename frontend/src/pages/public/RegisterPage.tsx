@@ -350,6 +350,9 @@ export const RegisterPage: React.FC = () => {
                 {...register('mobile')}
                 className="w-full bg-[#0B0F19] border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm focus:outline-none transition-colors font-mono"
               />
+              <p className="text-[11px] text-slate-400">
+                Only one registration is permitted per contact number.
+              </p>
               {errors.mobile && (
                 <p className="text-xs text-rose-400">{errors.mobile.message}</p>
               )}

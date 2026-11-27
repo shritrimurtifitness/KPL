@@ -186,7 +186,7 @@ class SlotManager:
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Mobile number {mobile} is already registered under Registration ID {active_for_mobile.registration_id}."
+                    detail=f"Mobile number {mobile} is already registered under Registration ID {active_for_mobile.registration_id}. Only one registration per contact number is allowed."
                 )
 
         # Count total active slots: CONFIRMED + PAYMENT_SUBMITTED + RESERVED(unexpired)
