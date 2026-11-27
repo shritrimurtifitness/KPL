@@ -8,7 +8,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  leagueName = 'Karnataka Premier League',
+  leagueName = 'Koparde Premier League',
   tournamentTitle = 'Season 2027 Registration',
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

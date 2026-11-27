@@ -12,7 +12,7 @@ Fetches public tournament details for landing and registration pages.
 - **Response `200 OK`**:
 ```json
 {
-  "league_name": "Karnataka Premier League",
+  "league_name": "Koparde Premier League",
   "tournament_title": "KPL Cricket Championship Season 2027",
   "registration_fee": 100.0,
   "maximum_registrations": 120,
@@ -48,7 +48,7 @@ Returns live concurrency-checked slot capacity and availability.
   "registration_open": true,
   "registration_fee": 100.0,
   "registration_deadline": null,
-  "league_name": "Karnataka Premier League",
+  "league_name": "Koparde Premier League",
   "tournament_title": "KPL Cricket Championship Season 2027"
 }
 ```

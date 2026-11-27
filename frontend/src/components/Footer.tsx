@@ -8,7 +8,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({
-  leagueName = 'Karnataka Premier League',
+  leagueName = 'Koparde Premier League',
   whatsappNumber = '+919876543210',
 }) => {
   return (

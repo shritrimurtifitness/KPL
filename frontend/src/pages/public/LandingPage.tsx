@@ -28,7 +28,7 @@ export const LandingPage: React.FC = () => {
     fetchData();
   }, []);
 
-  const leagueName = settings?.league_name || 'Karnataka Premier League';
+  const leagueName = settings?.league_name || 'Koparde Premier League';
   const tournamentTitle = settings?.tournament_title || 'Season 2027 Registration';
   const fee = settings?.registration_fee || 100;
   const maxRegistrations = availability?.maximum_capacity || 120;

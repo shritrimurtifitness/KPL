@@ -40,7 +40,7 @@ def init_db():
         if not settings_row:
             default_settings = LeagueSettings(
                 id=1,
-                league_name="Karnataka Premier League",
+                league_name="Koparde Premier League",
                 tournament_title="KPL Cricket Championship Season 2027",
                 registration_fee=100.00,
                 maximum_registrations=120,
