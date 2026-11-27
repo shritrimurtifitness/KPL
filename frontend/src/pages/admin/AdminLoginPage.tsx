@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Shield, Lock, Mail, Loader2, AlertCircle, Trophy } from 'lucide-react';
+import { Shield, Lock, Phone, Loader2, AlertCircle, Trophy } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,7 +20,7 @@ export const AdminLoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Please provide your admin email and password.');
+      setError('Please provide your admin contact number and password.');
       return;
     }
 
@@ -73,15 +73,15 @@ export const AdminLoginPage: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-              Admin Email
+              Admin Contact Number / Email
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                <Mail className="w-4 h-4" />
+                <Phone className="w-4 h-4" />
               </div>
               <input
-                type="email"
-                placeholder="admin@cricketleague.com"
+                type="text"
+                placeholder="e.g. 9922335991"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

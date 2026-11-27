@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class AdminLoginRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(..., min_length=3, description="Admin contact number or email")
     password: str
 
 class AdminTokenResponse(BaseModel):

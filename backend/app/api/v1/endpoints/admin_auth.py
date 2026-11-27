@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.database.session import get_db
 from app.core.security import verify_password, create_access_token
 from app.core.deps import get_current_admin
@@ -16,13 +17,23 @@ def admin_login(
     db: Session = Depends(get_db)
 ):
     """
-    Authenticates admin user and returns JWT bearer token.
+    Authenticates admin user using contact number or email and returns JWT bearer token.
     """
-    admin = db.query(Admin).filter(Admin.email == login_data.email.lower().strip()).first()
+    clean_id = login_data.email.strip().lower()
+    digits = "".join(filter(str.isdigit, clean_id))
+    
+    query_conditions = [Admin.email == clean_id]
+    if digits:
+        query_conditions.append(Admin.email == digits)
+        if len(digits) >= 10:
+            query_conditions.append(Admin.email.ilike(f"%{digits[-10:]}"))
+    query_conditions.append(Admin.email == f"{clean_id}@cricketleague.com")
+
+    admin = db.query(Admin).filter(or_(*query_conditions)).first()
     if not admin or not verify_password(login_data.password, admin.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password.",
+            detail="Incorrect contact number/email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not admin.is_active:
