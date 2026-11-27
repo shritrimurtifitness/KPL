@@ -31,6 +31,7 @@ export const PaymentPage: React.FC = () => {
 
   // Form State
   const [utr, setUtr] = useState('');
+  const [last4Digits, setLast4Digits] = useState('');
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [compressing, setCompressing] = useState(false);
@@ -125,10 +126,6 @@ export const PaymentPage: React.FC = () => {
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!utr.trim() || utr.trim().length < 6) {
-      alert('Please enter a valid 12-digit UPI reference (UTR).');
-      return;
-    }
     if (!screenshot) {
       alert('Please upload a screenshot of your successful UPI payment.');
       return;
@@ -139,7 +136,9 @@ export const PaymentPage: React.FC = () => {
 
     const formData = new FormData();
     formData.append('registration_id', registrationId);
-    formData.append('utr', utr.trim().toUpperCase());
+    if (utr.trim()) {
+      formData.append('utr', utr.trim().toUpperCase());
+    }
     formData.append('screenshot', screenshot);
 
     try {
@@ -147,6 +146,7 @@ export const PaymentPage: React.FC = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSubmitSuccess(true);
+      setLast4Digits(utr.trim());
       setWhatsappUrl(res.data.whatsapp_url);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to submit payment proof.');
@@ -189,6 +189,13 @@ export const PaymentPage: React.FC = () => {
 
   // Official QR Code image uploaded by admin or fallback dynamic generator
   const qrCodeUrl = settings?.upi_qr_path || `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(upiIntentUri)}`;
+
+  // Dynamic WhatsApp Click-to-Chat URL to +919922335991
+  const rawTargetPhone = (settings?.whatsapp_number || '+919922335991').replace(/[^0-9]/g, '');
+  const cleanTargetPhone = rawTargetPhone.length === 10 ? `91${rawTargetPhone}` : (rawTargetPhone || '919922335991');
+  const utrDisplay = last4Digits.trim() || utr.trim() || 'Attached in Screenshot';
+  const dynamicWhatsappMessage = `Hello Admin,\n\nI have completed my cricket league registration payment.\n\nRegistration ID: ${registrationId}\nName: ${registration?.full_name || 'Player'}\nAmount: ₹${amount}\nUPI Ref (Last 4 Digits): ${utrDisplay}\n\nPlease verify my payment screenshot and confirm my registration.\n\nThank you.`;
+  const dynamicWhatsappUrl = `https://wa.me/${cleanTargetPhone}?text=${encodeURIComponent(dynamicWhatsappMessage)}`;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-8">
@@ -260,22 +267,43 @@ export const PaymentPage: React.FC = () => {
             </div>
           </div>
 
-          {whatsappUrl && (
-            <div className="pt-2">
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center space-x-2 bg-[#25D366] hover:bg-[#1EBE5D] text-slate-950 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition-transform hover:scale-105"
-              >
-                <MessageCircle className="w-5 h-5 fill-slate-950" />
-                <span>Notify Admin on WhatsApp</span>
-              </a>
-              <p className="text-xs text-slate-500 mt-2">
-                Click above to send your pre-filled registration details directly to the admin.
-              </p>
+          {/* Optional Last 4 Digits Input for WhatsApp */}
+          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl max-w-sm mx-auto text-left space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-semibold text-slate-300">
+                Last 4 Digits of UPI Reference Number
+              </label>
+              <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+                Optional
+              </span>
             </div>
-          )}
+            <input
+              type="text"
+              maxLength={16}
+              placeholder="e.g. 3741 (Optional)"
+              value={last4Digits}
+              onChange={(e) => setLast4Digits(e.target.value)}
+              className="w-full bg-[#0B0F19] border border-slate-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono tracking-wider focus:outline-none transition-colors"
+            />
+            <p className="text-[11px] text-slate-400">
+              Optional: Enter the last 4 digits to include in the notification to the admin (+91 9922335991).
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <a
+              href={dynamicWhatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center space-x-2 bg-[#25D366] hover:bg-[#1EBE5D] text-slate-950 font-bold px-6 py-3.5 rounded-2xl shadow-lg transition-transform hover:scale-105"
+            >
+              <MessageCircle className="w-5 h-5 fill-slate-950" />
+              <span>Notify Admin on WhatsApp</span>
+            </a>
+            <p className="text-xs text-slate-500 mt-2">
+              Click above to send your pre-filled registration details directly to the admin (+91 9922335991).
+            </p>
+          </div>
 
           <div className="pt-4 border-t border-slate-800">
             <button
@@ -354,26 +382,34 @@ export const PaymentPage: React.FC = () => {
                 </span>
                 <h3 className="text-xl font-bold text-white mt-1">Submit Payment Proof</h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  After paying ₹{amount}, enter your 12-digit UPI transaction reference (UTR) and upload the receipt screenshot.
+                  After paying ₹{amount}, upload your receipt screenshot and optionally provide the last 4 digits of the UPI reference.
                 </p>
               </div>
 
               <form onSubmit={handleSubmitProof} className="space-y-6">
                 {/* UTR Input */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                    UPI Transaction Reference / UTR (12 Digits) <span className="text-rose-400">*</span>
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                      Last 4 Digits of UPI Reference Number
+                    </label>
+                    <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+                      Optional
+                    </span>
+                  </div>
                   <input
                     type="text"
-                    placeholder="e.g. 428719283741"
+                    maxLength={16}
+                    placeholder="e.g. 3741 (Optional)"
                     value={utr}
-                    onChange={(e) => setUtr(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setUtr(e.target.value);
+                      setLast4Digits(e.target.value);
+                    }}
                     className="w-full bg-[#0B0F19] border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm font-mono tracking-wider focus:outline-none transition-colors"
                   />
                   <p className="text-[11px] text-slate-500">
-                    Found in your bank/UPI app transaction details receipt.
+                    Optional: Enter the last 4 digits (or full reference) from your UPI receipt to help admin verify faster.
                   </p>
                 </div>
 

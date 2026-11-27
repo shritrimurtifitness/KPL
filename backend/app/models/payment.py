@@ -17,7 +17,7 @@ class Payment(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     registration_id = Column(String(36), ForeignKey("registrations.id", ondelete="CASCADE"), nullable=False, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
-    utr = Column(String(64), unique=True, nullable=False, index=True)
+    utr = Column(String(64), unique=False, nullable=True, index=True)
     screenshot_path = Column(String(500), nullable=False)
     status = Column(
         String(32),

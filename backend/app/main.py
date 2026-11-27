@@ -52,7 +52,7 @@ def init_db():
                 upi_id="indrajeet.shirgaonkar-1@okaxis",
                 upi_display_name="INDUJI",
                 upi_qr_path="/images/official_upi_qr.png",
-                whatsapp_number="+919876543210",
+                whatsapp_number="+919922335991",
                 registration_prefix="KPL",
                 registration_year=2027,
                 terms_and_conditions=(

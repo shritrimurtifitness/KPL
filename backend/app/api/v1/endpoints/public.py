@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -84,7 +85,7 @@ def create_registration(
 @router.post("/payments/submit")
 async def submit_payment_proof(
     registration_id: str = Form(..., description="Unique Registration ID"),
-    utr: str = Form(..., description="UPI Transaction Reference / UTR"),
+    utr: Optional[str] = Form(None, description="Last 4 digits of UPI Reference / UTR (Optional)"),
     screenshot: UploadFile = File(..., description="Payment screenshot image (JPG/PNG)"),
     db: Session = Depends(get_db)
 ):
@@ -94,7 +95,7 @@ async def submit_payment_proof(
     result = await PaymentService.submit_payment_proof(
         db=db,
         registration_id=registration_id.strip(),
-        utr=utr.strip(),
+        utr=utr.strip() if utr else None,
         screenshot_file=screenshot
     )
     return result

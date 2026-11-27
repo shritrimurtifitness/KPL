@@ -21,7 +21,7 @@ class LeagueSettings(Base):
     upi_qr_path = Column(String(500), nullable=True)
     
     # Contact and Identification
-    whatsapp_number = Column(String(20), default="+919876543210", nullable=False)
+    whatsapp_number = Column(String(20), default="+919922335991", nullable=False)
     registration_prefix = Column(String(20), default="CRL", nullable=False)
     registration_year = Column(Integer, default=2027, nullable=False)
     

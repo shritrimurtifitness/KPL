@@ -33,28 +33,33 @@ class PaymentService:
 
     @staticmethod
     def generate_whatsapp_chat_url(
-        admin_whatsapp: str,
+        admin_whatsapp: Optional[str],
         registration_id: str,
         player_name: str,
         mobile_number: str,
         amount: float,
-        utr: str
+        utr: Optional[str] = None
     ) -> str:
         """
         Builds official WhatsApp click-to-chat URL with prefilled message.
         """
-        # Clean phone number (strip spaces, dashes, ensure international format)
-        cleaned_phone = "".join(filter(lambda x: x.isdigit(), admin_whatsapp))
+        cleaned_phone = "".join(filter(lambda x: x.isdigit(), admin_whatsapp or ""))
+        if not cleaned_phone:
+            cleaned_phone = "919922335991"
+        elif len(cleaned_phone) == 10:
+            cleaned_phone = f"91{cleaned_phone}"
         
+        utr_display = utr.strip() if utr and utr.strip() else "Attached in Screenshot"
+
         message = (
             f"Hello Admin,\n\n"
-            f"I have completed my cricket league registration.\n\n"
+            f"I have completed my cricket league registration payment.\n\n"
             f"Registration ID: {registration_id}\n"
             f"Name: {player_name}\n"
             f"Mobile: {mobile_number}\n"
             f"Amount: ₹{int(amount) if amount.is_integer() else f'{amount:.2f}'}\n"
-            f"UTR: {utr}\n\n"
-            f"Please verify my payment and confirm my registration.\n\n"
+            f"UPI Ref (Last 4 Digits): {utr_display}\n\n"
+            f"Please verify my payment screenshot and confirm my registration.\n\n"
             f"Thank you."
         )
         encoded_message = urllib.parse.quote(message)
@@ -64,16 +69,14 @@ class PaymentService:
     async def submit_payment_proof(
         db: Session,
         registration_id: str,
-        utr: str,
-        screenshot_file: UploadFile
+        screenshot_file: UploadFile,
+        utr: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Validates reservation expiry, verifies UTR uniqueness,
+        Validates reservation expiry, verifies optional UTR,
         uploads payment screenshot, and updates status to PAYMENT_SUBMITTED.
         """
-        clean_utr = utr.strip().upper()
-        if not clean_utr or len(clean_utr) < 6:
-            raise HTTPException(status_code=400, detail="Please enter a valid UPI transaction reference / UTR (at least 6 characters).")
+        clean_utr = utr.strip().upper() if utr and utr.strip() else None
 
         # 1. Clean up expired reservations first
         SlotManager.cleanup_expired_reservations(db)
@@ -97,13 +100,14 @@ class PaymentService:
             db.commit()
             raise HTTPException(status_code=400, detail="Reservation window (10 minutes) has elapsed. Slot expired.")
 
-        # 3. Check duplicate UTR across all payments
-        existing_payment = db.query(Payment).filter(Payment.utr == clean_utr).first()
-        if existing_payment:
-            raise HTTPException(
-                status_code=400,
-                detail=f"This UTR / Transaction Reference '{clean_utr}' has already been submitted for another registration."
-            )
+        # 3. Check duplicate full UTR (only when a full 10+ character UTR is provided)
+        if clean_utr and len(clean_utr) >= 10:
+            existing_payment = db.query(Payment).filter(Payment.utr == clean_utr).first()
+            if existing_payment:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"This UTR / Transaction Reference '{clean_utr}' has already been submitted for another registration."
+                )
 
         # 4. Fetch league settings for max upload size and WhatsApp number
         settings = db.query(LeagueSettings).filter(LeagueSettings.id == 1).first()
@@ -133,17 +137,16 @@ class PaymentService:
         db.refresh(reg)
         db.refresh(payment)
 
-        # Generate WhatsApp link for user convenience
-        whatsapp_url = None
-        if settings and settings.whatsapp_number:
-            whatsapp_url = PaymentService.generate_whatsapp_chat_url(
-                admin_whatsapp=settings.whatsapp_number,
-                registration_id=reg.registration_id,
-                player_name=reg.full_name,
-                mobile_number=reg.mobile,
-                amount=float(reg.amount),
-                utr=clean_utr
-            )
+        # Generate WhatsApp link for user convenience (destination defaults to +919922335991)
+        whatsapp_number = settings.whatsapp_number if settings and settings.whatsapp_number else "+919922335991"
+        whatsapp_url = PaymentService.generate_whatsapp_chat_url(
+            admin_whatsapp=whatsapp_number,
+            registration_id=reg.registration_id,
+            player_name=reg.full_name,
+            mobile_number=reg.mobile,
+            amount=float(reg.amount),
+            utr=clean_utr
+        )
 
         return {
             "message": "Payment proof submitted successfully. Pending admin manual verification.",
