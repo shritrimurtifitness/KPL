@@ -13,8 +13,9 @@ class PaymentResponse(BaseModel):
     id: str
     registration_id: str
     amount: float
-    utr: str
+    utr: Optional[str] = None
     screenshot_path: str
+    screenshot_url: Optional[str] = None
     status: str
     submitted_at: datetime
     verified_at: Optional[datetime] = None
@@ -29,7 +30,7 @@ class PendingPaymentItem(BaseModel):
     player_name: str
     mobile: str
     amount: float
-    utr: str
+    utr: Optional[str] = None
     status: str
     submitted_at: datetime
     screenshot_url: str

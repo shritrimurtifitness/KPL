@@ -18,6 +18,7 @@ import {
   User
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/media';
 
 export const AdminRegistrationsPage: React.FC = () => {
   const [registrations, setRegistrations] = useState<any[]>([]);
@@ -261,7 +262,7 @@ export const AdminRegistrationsPage: React.FC = () => {
                         <div className="flex items-center space-x-3">
                           {reg.photo_url ? (
                             <img
-                              src={reg.photo_url}
+                              src={resolveMediaUrl(reg.photo_url)}
                               alt={reg.full_name}
                               className="w-8 h-8 rounded-lg object-cover border border-slate-700 bg-slate-800 shrink-0"
                             />
@@ -333,7 +334,7 @@ export const AdminRegistrationsPage: React.FC = () => {
                     <div className="flex items-center space-x-3 min-w-0">
                       {reg.photo_url ? (
                         <img
-                          src={reg.photo_url}
+                          src={resolveMediaUrl(reg.photo_url)}
                           alt={reg.full_name}
                           className="w-11 h-11 rounded-xl object-cover border border-slate-700 bg-slate-800 shrink-0"
                         />
@@ -438,7 +439,7 @@ export const AdminRegistrationsPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 {selectedReg.photo_url ? (
                   <img
-                    src={selectedReg.photo_url}
+                    src={resolveMediaUrl(selectedReg.photo_url)}
                     alt={selectedReg.full_name}
                     className="w-14 h-14 rounded-2xl object-cover border border-emerald-500/40 bg-slate-800 shrink-0 shadow-md"
                   />
@@ -539,12 +540,12 @@ export const AdminRegistrationsPage: React.FC = () => {
                         )}
                       </div>
                       <a
-                        href={`/api/v1/admin/payments/${p.id}/screenshot`}
+                        href={resolveMediaUrl((p as any).screenshot_url || `/api/v1/admin/payments/${p.id}/screenshot`)}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold"
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold inline-flex items-center space-x-1"
                       >
-                        View Screenshot
+                        <span>View Screenshot</span>
                       </a>
                     </div>
                   ))}

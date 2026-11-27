@@ -56,6 +56,14 @@ class Registration(Base):
     @property
     def photo_url(self):
         if self.photo_path:
+            if self.photo_path.startswith("supabase://"):
+                try:
+                    from app.services.storage import storage_service
+                    signed_url = storage_service.get_public_or_signed_url(self.photo_path)
+                    if signed_url:
+                        return signed_url
+                except Exception:
+                    pass
             return f"/api/v1/registrations/{self.registration_id}/photo"
         return None
 

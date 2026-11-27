@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { PublicRegistrationStatus } from '../../types';
+import { resolveMediaUrl } from '../../utils/media';
 
 export const StatusLookupPage: React.FC = () => {
   const [registrationId, setRegistrationId] = useState('');
@@ -179,7 +180,7 @@ export const StatusLookupPage: React.FC = () => {
             <div className="flex items-center space-x-4">
               {result.photo_url ? (
                 <img
-                  src={result.photo_url}
+                  src={resolveMediaUrl(result.photo_url)}
                   alt={result.full_name}
                   className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-md shrink-0 bg-slate-900"
                 />

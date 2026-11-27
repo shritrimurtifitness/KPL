@@ -114,6 +114,37 @@ class StorageService:
         
         return f"local://{unique_filename}"
 
+    def get_public_or_signed_url(self, storage_path: Optional[str], expiry_seconds: int = 604800) -> Optional[str]:
+        """
+        Generates direct signed URL (7 days validity) or public URL for web/mobile browsers.
+        """
+        if not storage_path:
+            return None
+        if storage_path.startswith("http://") or storage_path.startswith("https://"):
+            return storage_path
+        if storage_path.startswith("supabase://"):
+            parts = storage_path.replace("supabase://", "").split("/", 1)
+            if len(parts) == 2:
+                bucket, path = parts[0], parts[1]
+                if self.supabase_client:
+                    try:
+                        res = self.supabase_client.storage.from_(bucket).create_signed_url(path, expiry_seconds)
+                        url = res.get("signedURL") or res.get("signedUrl")
+                        if url:
+                            return url
+                    except Exception as e:
+                        print(f"[StorageService] create_signed_url error: {e}")
+                
+                # Fallback to direct supabase URL
+                if settings.SUPABASE_URL:
+                    base = settings.SUPABASE_URL.rstrip("/")
+                    return f"{base}/storage/v1/object/public/{bucket}/{path}"
+
+        filename = storage_path.replace("local://", "")
+        if "/" in filename:
+            filename = os.path.basename(filename)
+        return f"/api/v1/storage/local/{filename}"
+
     def get_file_bytes_or_url(self, storage_path: str) -> Tuple[Optional[bytes], Optional[str], str]:
         """
         Returns (file_bytes, signed_url, mime_type)
@@ -124,8 +155,8 @@ class StorageService:
             bucket = parts[0]
             path = parts[1]
             if self.supabase_client:
-                # Generate signed URL valid for 15 minutes
-                res = self.supabase_client.storage.from_(bucket).create_signed_url(path, 900)
+                # Generate signed URL valid for 7 days
+                res = self.supabase_client.storage.from_(bucket).create_signed_url(path, 604800)
                 signed_url = res.get("signedURL") or res.get("signedUrl")
                 return None, signed_url, "image/jpeg"
         

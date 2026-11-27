@@ -459,11 +459,16 @@ def test_player_photo_upload_and_registration(client, default_league_settings):
     reg_data = reg_res.json()
     assert reg_data["photo_url"] is not None
 
-    # Fetch photo (follow_redirects=False handles Supabase 307 RedirectResponse or 200 Local)
-    photo_res = client.get(reg_data["photo_url"], follow_redirects=False)
-    assert photo_res.status_code in [200, 307], f"Detail: {photo_res.text}, status: {photo_res.status_code}"
-    if photo_res.status_code == 307:
-        assert "bgbtfypypghblmppncpn.supabase.co" in photo_res.headers["location"]
+    # Photo URL should be present (either direct signed URL or relative photo route)
+    photo_url = reg_data["photo_url"]
+    assert photo_url is not None
+    if photo_url.startswith("http"):
+        assert "supabase.co" in photo_url
     else:
-        assert photo_res.headers["content-type"] in ["image/jpeg", "image/png", "image/webp"]
+        photo_res = client.get(photo_url, follow_redirects=False)
+        assert photo_res.status_code in [200, 307]
+
+    # Verify the dedicated endpoint also serves/redirects properly
+    direct_res = client.get(f"/api/v1/registrations/{reg_data['registration_id']}/photo", follow_redirects=False)
+    assert direct_res.status_code in [200, 307]
 

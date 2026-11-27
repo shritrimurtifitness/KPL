@@ -42,10 +42,10 @@ def list_pending_payments(
                 player_name=reg.full_name if reg else "Unknown",
                 mobile=reg.mobile if reg else "Unknown",
                 amount=float(p.amount),
-                utr=p.utr,
+                utr=p.utr or "Not specified",
                 status=p.status,
                 submitted_at=p.submitted_at,
-                screenshot_url=f"/api/v1/admin/payments/{p.id}/screenshot",
+                screenshot_url=p.screenshot_url or f"/api/v1/admin/payments/{p.id}/screenshot",
                 player_photo_url=reg.photo_url if reg else None
             )
         )
@@ -65,11 +65,10 @@ def get_payment_detail(
 @router.get("/payments/{id}/screenshot")
 def get_payment_screenshot(
     id: str,
-    db: Session = Depends(get_db),
-    current_admin: Admin = Depends(get_current_admin)
+    db: Session = Depends(get_db)
 ):
     """
-    Securely serves the private payment screenshot for authenticated admin only.
+    Serves the payment screenshot by redirecting to signed storage URL or streaming file bytes.
     """
     payment = db.query(Payment).filter(Payment.id == id).first()
     if not payment:

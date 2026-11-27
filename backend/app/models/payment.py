@@ -36,3 +36,17 @@ class Payment(Base):
     # Relationships
     registration = relationship("Registration", back_populates="payments")
     verifier = relationship("Admin", foreign_keys=[verified_by])
+
+    @property
+    def screenshot_url(self):
+        if self.screenshot_path:
+            if self.screenshot_path.startswith("supabase://"):
+                try:
+                    from app.services.storage import storage_service
+                    signed_url = storage_service.get_public_or_signed_url(self.screenshot_path)
+                    if signed_url:
+                        return signed_url
+                except Exception:
+                    pass
+            return f"/api/v1/admin/payments/{self.id}/screenshot"
+        return None
