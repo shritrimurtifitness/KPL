@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { resolveMediaUrl } from '../../utils/media';
+import { ImageViewerModal } from '../../components/ImageViewerModal';
 
 export const AdminRegistrationsPage: React.FC = () => {
   const [registrations, setRegistrations] = useState<any[]>([]);
@@ -26,6 +27,15 @@ export const AdminRegistrationsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  // In-page Image Lightbox Modal
+  const [viewerImage, setViewerImage] = useState<{
+    url: string;
+    title: string;
+    subtitle?: string;
+    badge?: string;
+    type: 'photo' | 'screenshot';
+  } | null>(null);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -261,11 +271,26 @@ export const AdminRegistrationsPage: React.FC = () => {
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-3">
                           {reg.photo_url ? (
-                            <img
-                              src={resolveMediaUrl(reg.photo_url)}
-                              alt={reg.full_name}
-                              className="w-8 h-8 rounded-lg object-cover border border-slate-700 bg-slate-800 shrink-0"
-                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setViewerImage({
+                                  url: resolveMediaUrl(reg.photo_url),
+                                  title: reg.full_name,
+                                  subtitle: `${reg.registration_id} • Player Profile Photograph`,
+                                  badge: reg.registration_id,
+                                  type: 'photo',
+                                })
+                              }
+                              className="focus:outline-none group relative cursor-pointer"
+                              title="Click to view full photo on page"
+                            >
+                              <img
+                                src={resolveMediaUrl(reg.photo_url)}
+                                alt={reg.full_name}
+                                className="w-8 h-8 rounded-lg object-cover border border-slate-700 bg-slate-800 shrink-0 group-hover:border-emerald-500 transition-colors"
+                              />
+                            </button>
                           ) : (
                             <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                               <User className="w-4 h-4" />
@@ -333,11 +358,26 @@ export const AdminRegistrationsPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center space-x-3 min-w-0">
                       {reg.photo_url ? (
-                        <img
-                          src={resolveMediaUrl(reg.photo_url)}
-                          alt={reg.full_name}
-                          className="w-11 h-11 rounded-xl object-cover border border-slate-700 bg-slate-800 shrink-0"
-                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewerImage({
+                              url: resolveMediaUrl(reg.photo_url),
+                              title: reg.full_name,
+                              subtitle: `${reg.registration_id} • Player Profile Photograph`,
+                              badge: reg.registration_id,
+                              type: 'photo',
+                            })
+                          }
+                          className="focus:outline-none group relative cursor-pointer shrink-0"
+                          title="Click to view full photo on page"
+                        >
+                          <img
+                            src={resolveMediaUrl(reg.photo_url)}
+                            alt={reg.full_name}
+                            className="w-11 h-11 rounded-xl object-cover border border-slate-700 bg-slate-800 shrink-0 group-hover:border-emerald-500 transition-colors"
+                          />
+                        </button>
                       ) : (
                         <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                           <User className="w-5 h-5" />
@@ -438,11 +478,26 @@ export const AdminRegistrationsPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center space-x-4">
                 {selectedReg.photo_url ? (
-                  <img
-                    src={resolveMediaUrl(selectedReg.photo_url)}
-                    alt={selectedReg.full_name}
-                    className="w-14 h-14 rounded-2xl object-cover border border-emerald-500/40 bg-slate-800 shrink-0 shadow-md"
-                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setViewerImage({
+                        url: resolveMediaUrl(selectedReg.photo_url),
+                        title: selectedReg.full_name,
+                        subtitle: `${selectedReg.registration_id} • Player Profile Photograph`,
+                        badge: selectedReg.registration_id,
+                        type: 'photo',
+                      })
+                    }
+                    className="focus:outline-none group relative cursor-pointer shrink-0"
+                    title="Click to view full photo on page"
+                  >
+                    <img
+                      src={resolveMediaUrl(selectedReg.photo_url)}
+                      alt={selectedReg.full_name}
+                      className="w-14 h-14 rounded-2xl object-cover border border-emerald-500/40 bg-slate-800 shrink-0 shadow-md group-hover:border-emerald-400 transition-colors"
+                    />
+                  </button>
                 ) : (
                   <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 shrink-0">
                     <User className="w-7 h-7" />
@@ -539,14 +594,21 @@ export const AdminRegistrationsPage: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <a
-                        href={resolveMediaUrl((p as any).screenshot_url || `/api/v1/admin/payments/${p.id}/screenshot`)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold inline-flex items-center space-x-1"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewerImage({
+                            url: resolveMediaUrl((p as any).screenshot_url || `/api/v1/admin/payments/${p.id}/screenshot`),
+                            title: `Payment Receipt — ${selectedReg.full_name}`,
+                            subtitle: `Claimed UTR: ${p.utr || 'Not specified'} • ₹${p.amount} • Status: ${p.status}`,
+                            badge: selectedReg.registration_id,
+                            type: 'screenshot',
+                          })
+                        }
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold inline-flex items-center space-x-1 transition-colors cursor-pointer"
                       >
                         <span>View Screenshot</span>
-                      </a>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -566,6 +628,16 @@ export const AdminRegistrationsPage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Unified In-Page Image Viewer Modal (Opens on the same page for photo & screenshot) */}
+      <ImageViewerModal
+        isOpen={!!viewerImage}
+        onClose={() => setViewerImage(null)}
+        imageUrl={viewerImage?.url || ''}
+        title={viewerImage?.title || ''}
+        subtitle={viewerImage?.subtitle}
+        badge={viewerImage?.badge}
+        type={viewerImage?.type}
+      />
     </div>
   );
 };

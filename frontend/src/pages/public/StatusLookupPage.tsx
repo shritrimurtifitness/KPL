@@ -16,6 +16,7 @@ import {
 import { api } from '../../services/api';
 import { PublicRegistrationStatus } from '../../types';
 import { resolveMediaUrl } from '../../utils/media';
+import { ImageViewerModal } from '../../components/ImageViewerModal';
 
 export const StatusLookupPage: React.FC = () => {
   const [registrationId, setRegistrationId] = useState('');
@@ -23,6 +24,7 @@ export const StatusLookupPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PublicRegistrationStatus | null>(null);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,11 +181,18 @@ export const StatusLookupPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800/80 gap-4">
             <div className="flex items-center space-x-4">
               {result.photo_url ? (
-                <img
-                  src={resolveMediaUrl(result.photo_url)}
-                  alt={result.full_name}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-md shrink-0 bg-slate-900"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPhotoModalOpen(true)}
+                  className="focus:outline-none group relative cursor-pointer shrink-0"
+                  title="Click to view full photo on page"
+                >
+                  <img
+                    src={resolveMediaUrl(result.photo_url)}
+                    alt={result.full_name}
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-md shrink-0 bg-slate-900 group-hover:border-emerald-400 transition-colors"
+                  />
+                </button>
               ) : (
                 <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 shrink-0">
                   <User className="w-8 h-8" />
@@ -253,6 +262,18 @@ export const StatusLookupPage: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+      {/* In-Page Image Viewer Modal */}
+      {result && (
+        <ImageViewerModal
+          isOpen={photoModalOpen}
+          onClose={() => setPhotoModalOpen(false)}
+          imageUrl={resolveMediaUrl(result.photo_url)}
+          title={result.full_name}
+          subtitle={`${result.registration_id} • Player Profile Photograph`}
+          badge={result.registration_id}
+          type="photo"
+        />
       )}
     </div>
   );

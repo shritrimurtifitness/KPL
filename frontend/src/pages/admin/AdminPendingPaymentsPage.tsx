@@ -15,14 +15,20 @@ import {
 import { api } from '../../services/api';
 import { PendingPaymentItem } from '../../types';
 import { resolveMediaUrl } from '../../utils/media';
+import { ImageViewerModal } from '../../components/ImageViewerModal';
 
 export const AdminPendingPaymentsPage: React.FC = () => {
   const [payments, setPayments] = useState<PendingPaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Selected screenshot lightbox
-  const [activeItem, setActiveItem] = useState<PendingPaymentItem | null>(null);
-  const [previewPhoto, setPreviewPhoto] = useState<{ url: string; name: string } | null>(null);
+  // In-page Image Lightbox Modal (for both profile photo and screenshot)
+  const [viewerImage, setViewerImage] = useState<{
+    url: string;
+    title: string;
+    subtitle?: string;
+    badge?: string;
+    type: 'photo' | 'screenshot';
+  } | null>(null);
 
   // Action states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -136,9 +142,17 @@ export const AdminPendingPaymentsPage: React.FC = () => {
                   {item.player_photo_url ? (
                     <button
                       type="button"
-                      onClick={() => setPreviewPhoto({ url: resolveMediaUrl(item.player_photo_url), name: item.player_name })}
+                      onClick={() =>
+                        setViewerImage({
+                          url: resolveMediaUrl(item.player_photo_url),
+                          title: item.player_name,
+                          subtitle: `${item.registration_id} • Player Profile Photograph`,
+                          badge: item.registration_id,
+                          type: 'photo',
+                        })
+                      }
                       className="relative group cursor-pointer focus:outline-none"
-                      title="Click to view full photo"
+                      title="Click to view full photo on page"
                     >
                       <img
                         src={resolveMediaUrl(item.player_photo_url)}
@@ -176,7 +190,15 @@ export const AdminPendingPaymentsPage: React.FC = () => {
                     Uploaded Receipt
                   </span>
                   <div
-                    onClick={() => setActiveItem(item)}
+                    onClick={() =>
+                      setViewerImage({
+                        url: resolveMediaUrl(item.screenshot_url),
+                        title: `Payment Receipt — ${item.player_name}`,
+                        subtitle: `Claimed UTR: ${item.utr || 'Not specified'} • ₹${item.amount}`,
+                        badge: item.registration_id,
+                        type: 'screenshot',
+                      })
+                    }
                     className="relative cursor-pointer group rounded-xl overflow-hidden border border-slate-800 bg-slate-950 h-44 flex items-center justify-center shadow-inner"
                   >
                     <img
@@ -242,98 +264,16 @@ export const AdminPendingPaymentsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Screenshot Lightbox Modal (Fully responsive & mobile optimized) */}
-      {activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
-          <div className="relative max-w-4xl w-full bg-[#131B2E] border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col max-h-[95vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-mono text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded">
-                    {activeItem.registration_id}
-                  </span>
-                  <h3 className="text-sm sm:text-base font-bold text-white">
-                    {activeItem.player_name}
-                  </h3>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  UTR: <span className="font-mono text-cyan-400 font-bold">{activeItem.utr || 'Not specified'}</span> | ₹{activeItem.amount}
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <a
-                  href={resolveMediaUrl(activeItem.screenshot_url)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors"
-                  title="Open full resolution in new browser tab"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Open Original</span>
-                </a>
-
-                <button
-                  onClick={() => setActiveItem(null)}
-                  className="p-1.5 bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-white rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable / Pinch-to-zoom Image Area */}
-            <div className="flex-1 overflow-auto rounded-xl bg-slate-950 border border-slate-800/80 p-2 flex items-center justify-center min-h-[50vh]">
-              <img
-                src={resolveMediaUrl(activeItem.screenshot_url)}
-                alt="Full Payment Screenshot"
-                className="max-h-[75vh] w-auto max-w-full object-contain rounded"
-              />
-            </div>
-
-            {/* Modal Footer Controls */}
-            <div className="pt-3 mt-3 border-t border-slate-800 flex justify-between items-center text-xs">
-              <span className="text-slate-400 text-[11px]">
-                Tip: Tap & hold or double tap to zoom receipt details on mobile
-              </span>
-              <button
-                onClick={() => setActiveItem(null)}
-                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-semibold"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Player Photo Preview Modal */}
-      {previewPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative max-w-md w-full bg-[#131B2E] border border-slate-800 rounded-3xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                <User className="w-4 h-4 text-emerald-400" />
-                <span>{previewPhoto.name}</span>
-              </h3>
-              <button
-                onClick={() => setPreviewPhoto(null)}
-                className="p-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center max-h-[60vh]">
-              <img
-                src={previewPhoto.url}
-                alt={previewPhoto.name}
-                className="max-h-[55vh] w-auto max-w-full object-contain"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Unified In-Page Image Viewer Modal (Opens on the same page for photo & screenshot) */}
+      <ImageViewerModal
+        isOpen={!!viewerImage}
+        onClose={() => setViewerImage(null)}
+        imageUrl={viewerImage?.url || ''}
+        title={viewerImage?.title || ''}
+        subtitle={viewerImage?.subtitle}
+        badge={viewerImage?.badge}
+        type={viewerImage?.type}
+      />
 
       {/* Rejection Reason Dialog */}
       {rejectingItem && (
