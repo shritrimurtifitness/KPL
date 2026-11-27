@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -13,12 +13,31 @@ import {
   Trophy
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 
 export const AdminLayout: React.FC = () => {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  const fetchPendingCount = async () => {
+    try {
+      const res = await api.get('/admin/payments/pending');
+      setPendingCount(Array.isArray(res.data) ? res.data.length : 0);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchPendingCount();
+      const interval = setInterval(fetchPendingCount, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, location.pathname]);
 
   if (isLoading) {
     return (
@@ -70,18 +89,33 @@ export const AdminLayout: React.FC = () => {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
+            const isPayments = item.path === '/admin/payments';
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                   active
                     ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${active ? 'text-slate-950' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-slate-950' : 'text-slate-400'}`} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+
+                {isPayments && pendingCount > 0 && (
+                  <span
+                    className={`ml-2 px-2 py-0.5 text-xs font-mono font-bold rounded-full shrink-0 transition-colors ${
+                      active
+                        ? 'bg-slate-950 text-amber-400'
+                        : 'bg-rose-500 text-white shadow-sm shadow-rose-950/60 animate-pulse'
+                    }`}
+                  >
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -125,9 +159,12 @@ export const AdminLayout: React.FC = () => {
           <div className="flex items-center space-x-3 lg:hidden">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+              className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
             >
               <Menu className="w-6 h-6" />
+              {pendingCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-[#0F172A] animate-pulse" />
+              )}
             </button>
             <span className="font-bold text-white text-base">Admin Console</span>
           </div>
@@ -171,19 +208,34 @@ export const AdminLayout: React.FC = () => {
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
+                  const isPayments = item.path === '/admin/payments';
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold ${
+                      className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                         active
-                          ? 'bg-amber-500 text-slate-950 font-bold'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
                           : 'text-slate-300 hover:bg-slate-800'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-slate-950' : 'text-slate-400'}`} />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+
+                      {isPayments && pendingCount > 0 && (
+                        <span
+                          className={`ml-2 px-2.5 py-0.5 text-xs font-mono font-bold rounded-full shrink-0 ${
+                            active
+                              ? 'bg-slate-950 text-amber-400'
+                              : 'bg-rose-500 text-white shadow-sm shadow-rose-950/60 animate-pulse'
+                          }`}
+                        >
+                          {pendingCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
